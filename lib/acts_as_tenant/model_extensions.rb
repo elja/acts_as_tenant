@@ -48,12 +48,14 @@ module ActsAsTenant
         fkey = valid_options[:foreign_key] || ActsAsTenant.fkey
         belongs_to tenant, valid_options
 
-        default_scope lambda {
+        scope :with_current_tenant, lambda {
           if ActsAsTenant.configuration.require_tenant && ActsAsTenant.current_tenant.nil?
             raise ActsAsTenant::Errors::NoTenantSet
           end
-          where("#{self.table_name}.#{fkey} = ?", ActsAsTenant.current_tenant.id)  if ActsAsTenant.current_tenant
+          where("#{self.table_name}.#{fkey} = ?", ActsAsTenant.current_tenant.id)  if ActsAsTenant.current_tenant  
         }
+
+        default_scope lambda { with_current_tenant }
 
         # Add the following validations to the receiving model:
         # - new instances should have the tenant set
